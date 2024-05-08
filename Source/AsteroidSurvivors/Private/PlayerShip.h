@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Pawn.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+#include "NiagaraComponent.h"
+#include "Components/BoxComponent.h"
 #include "PlayerShip.generated.h"
 
 UCLASS()
@@ -24,17 +24,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UCapsuleComponent* Collider;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* Mesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USpringArmComponent* CameraBoom;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UCameraComponent* Camera;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Collider;
+	
+	UPROPERTY(EditAnywhere)
+	UNiagaraComponent* ExhaustParticles;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Input")
 	UInputMappingContext* InputMappingContext;

@@ -5,6 +5,7 @@
 #include "EnhancedInputComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 APlayerShip::APlayerShip()
@@ -12,22 +13,18 @@ APlayerShip::APlayerShip()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	Collider = CreateDefaultSubobject<UCapsuleComponent>("Collider");
-	SetRootComponent(Collider);
+	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>("Root");
+	SetRootComponent(Root);
+
+	Collider = CreateDefaultSubobject<UBoxComponent>("CollisionBox");
+	Collider->SetupAttachment(RootComponent);
+	
+	
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Ship");
 	Mesh->SetupAttachment(RootComponent);
 
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->SetUsingAbsoluteRotation(true); // Don't want arm to rotate when character does
-	CameraBoom->TargetArmLength = 800.0f;
-	CameraBoom->bDoCollisionTest = false; // Don't want to pull camera in when it collides with level
-
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	Camera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-
-	
+	ExhaustParticles = CreateDefaultSubobject<UNiagaraComponent>("ExhaustParticles");
+	ExhaustParticles->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -56,7 +53,7 @@ void APlayerShip::ShipMovement(const FInputActionValue& Value)
 	float NewMoveSpeed = MovementSpeed;
 	if (MovementInput > 0)
 		NewMoveSpeed += Acceleration * DeltaSeconds;
-	else
+	else if (MovementInput < 0)
 		NewMoveSpeed -= Acceleration * DeltaSeconds;
 	MovementSpeed = UKismetMathLibrary::FClamp(NewMoveSpeed, 0, TopSpeed);
 }
@@ -66,10 +63,13 @@ void APlayerShip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	const float ParticleSpawnRate = 50 * (MovementSpeed / TopSpeed);
+	ExhaustParticles->SetFloatParameter(FName("SpawnRate"), ParticleSpawnRate);
+	
 	if (MovementSpeed)
 	{
 		FVector NewLocation = GetActorLocation() + GetActorForwardVector() * (MovementSpeed * DeltaTime);
-		SetActorLocation(NewLocation);	
+		SetActorLocation(NewLocation);
 	}
 }
 
