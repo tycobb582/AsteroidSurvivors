@@ -11,3 +11,8 @@ AASGameMode::AASGameMode()
 	if (IsValid(PlayerPawnBPClass.Class))
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 }
+
+int AASGameMode::GetWorldSize()
+{
+	return WorldSize;
+}

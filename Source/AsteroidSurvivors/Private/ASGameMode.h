@@ -15,4 +15,11 @@ class AASGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 	AASGameMode();
+
+private:
+	int WorldSize = 8000;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	int GetWorldSize();
 };
