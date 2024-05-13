@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/Pawn.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "NiagaraComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/WeaponsSystem.h"
 #include "PlayerShip.generated.h"
 
 UCLASS()
@@ -29,6 +29,9 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* Collider;
+
+	UPROPERTY(EditAnywhere)
+	UWeaponsSystem* WeaponsSystem;
 	
 	UPROPERTY(EditAnywhere)
 	UNiagaraComponent* ExhaustParticles;

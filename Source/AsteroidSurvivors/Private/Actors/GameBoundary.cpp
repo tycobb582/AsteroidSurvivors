@@ -38,10 +38,15 @@ AGameBoundary::AGameBoundary()
 	BottomBound->SetStaticMesh(CubeMesh);
 	BottomBound->SetupAttachment(BottomBoundCollision);
 
-	LeftBoundCollision->OnComponentBeginOverlap.AddDynamic(this, &AGameBoundary::OnBoundsBeginOverlap);
-	TopBoundCollision->OnComponentBeginOverlap.AddDynamic(this, &AGameBoundary::OnBoundsBeginOverlap);
-	RightBoundCollision->OnComponentBeginOverlap.AddDynamic(this, &AGameBoundary::OnBoundsBeginOverlap);
-	BottomBoundCollision->OnComponentBeginOverlap.AddDynamic(this, &AGameBoundary::OnBoundsBeginOverlap);
+	LeftBoundCollision->OnComponentEndOverlap.AddDynamic(this, &AGameBoundary::OnBoundsEndOverlap);
+	TopBoundCollision->OnComponentEndOverlap.AddDynamic(this, &AGameBoundary::OnBoundsEndOverlap);
+	RightBoundCollision->OnComponentEndOverlap.AddDynamic(this, &AGameBoundary::OnBoundsEndOverlap);
+	BottomBoundCollision->OnComponentEndOverlap.AddDynamic(this, &AGameBoundary::OnBoundsEndOverlap);
+
+	OppositeWalls.Add(TopBoundCollision, BottomBoundCollision);
+	OppositeWalls.Add(BottomBoundCollision, TopBoundCollision);
+	OppositeWalls.Add(LeftBoundCollision, RightBoundCollision);
+	OppositeWalls.Add(RightBoundCollision, LeftBoundCollision);
 }
 
 void AGameBoundary::OnConstruction(const FTransform& Transform)
@@ -60,13 +65,13 @@ void AGameBoundary::OnConstruction(const FTransform& Transform)
 	float HalfBoundaryHeight = static_cast<float>(BoundaryWidth) * 0.28125;
 	
 
-	FVector BoxExtent = FVector(HalfBondaryWidth, 32, 32);
+	const FVector BoxExtent = FVector(HalfBondaryWidth, 32, 300);
 	LeftBoundCollision->SetBoxExtent(BoxExtent);
 	TopBoundCollision->SetBoxExtent(BoxExtent);
 	RightBoundCollision->SetBoxExtent(BoxExtent);
 	BottomBoundCollision->SetBoxExtent(BoxExtent);
 
-	FVector BoundScale = FVector(2 * (HalfBondaryWidth / 100), 1, 1);
+	const FVector BoundScale = FVector(2 * (HalfBondaryWidth / 100), 1, 1);
 	LeftBound->SetHiddenInGame(true);
 	LeftBound->SetCollisionProfileName("NoCollision");
 	LeftBound->SetRelativeScale3D(BoundScale);
@@ -80,29 +85,59 @@ void AGameBoundary::OnConstruction(const FTransform& Transform)
 	BottomBound->SetCollisionProfileName("NoCollision");
 	BottomBound->SetRelativeScale3D(BoundScale);
 
-	TopBoundCollision->SetRelativeLocation(FVector(HalfBoundaryHeight + 100, 0, 0));
+	TopBoundCollision->SetRelativeLocation(FVector(HalfBoundaryHeight, 0, 0));
 	TopBoundCollision->SetRelativeRotation(FRotator(0, 90, 0));
-	LeftBoundCollision->SetRelativeLocation(FVector(0, -HalfBondaryWidth - 100, 0));
-	RightBoundCollision->SetRelativeLocation(FVector(0, HalfBondaryWidth + 100, 0));
-	BottomBoundCollision->SetRelativeLocation(FVector(-HalfBoundaryHeight - 100, 0, 0));
+	LeftBoundCollision->SetRelativeLocation(FVector(0, -HalfBondaryWidth, 0));
+	RightBoundCollision->SetRelativeLocation(FVector(0, HalfBondaryWidth, 0));
+	BottomBoundCollision->SetRelativeLocation(FVector(-HalfBoundaryHeight, 0, 0));
 	BottomBoundCollision->SetRelativeRotation(FRotator(0, 90, 0));
 }
 
-void AGameBoundary::OnBoundsBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AGameBoundary::OnBoundsEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (Debug)
-		GEngine->AddOnScreenDebugMessage(-1, 2.0, FColor::Blue, FString::Printf(TEXT("%s collision with %s"), *OtherActor->GetName(), *OverlappedComp->GetName()));
+	TArray<AActor*> ActorsTeleporting;
+	TeleportingActors.GetKeys(ActorsTeleporting);
+	for (const auto Actor : ActorsTeleporting)
+	{
+		if (!IsValid(Actor))
+			TeleportingActors.Remove(Actor);
+	}
+	
+	if (TeleportingActors.Contains(OtherActor))
+	{
+		TArray<UPrimitiveComponent*> WallsHit = TeleportingActors[OtherActor];
+		for (const auto Wall : WallsHit)
+		{
+			if (OverlappedComp == OppositeWalls[Wall])
+			{
+				TeleportingActors[OtherActor].Remove(Wall);
+				if (TeleportingActors[OtherActor].Num() == 0)
+					TeleportingActors.Remove(OtherActor);
+				return;
+			}
+		}
+	}
+	
+	if (Debug && TeleportingActors.Contains(OtherActor))
+		GEngine->AddOnScreenDebugMessage(-1, 2.0, FColor::Blue, FString::Printf(TEXT("%s has %d teleports"), *OtherActor->GetName(), TeleportingActors[OtherActor].Num()));
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0, FColor::Blue, FString::Printf(TEXT("%s collision with %s"), *OtherActor->GetName(), *OverlappedComp->GetName()));
 	const FVector ActorLocation = OtherActor->GetActorLocation();
 	FVector NewLocation = ActorLocation;
 	const FString CompName = OverlappedComp->GetName();
+	
 	if (CompName == "LeftCollision")
-		NewLocation.Y = RightBoundCollision->GetComponentLocation().Y - 150;
+		NewLocation.Y = RightBoundCollision->GetComponentLocation().Y;
 	else if (CompName == "RightCollision")
-		NewLocation.Y = LeftBoundCollision->GetComponentLocation().Y + 150;
+		NewLocation.Y = LeftBoundCollision->GetComponentLocation().Y;
 	else if (CompName == "TopCollision")
-		NewLocation.X = BottomBoundCollision->GetComponentLocation().X + 150;
+		NewLocation.X = BottomBoundCollision->GetComponentLocation().X;
 	else if (CompName == "BottomCollision")
-		NewLocation.X = TopBoundCollision->GetComponentLocation().X - 150;
-	OtherActor->SetActorLocation(NewLocation);
+		NewLocation.X = TopBoundCollision->GetComponentLocation().X;
+	OtherActor->SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+	if (TeleportingActors.Contains(OtherActor))
+		TeleportingActors[OtherActor].Add(OverlappedComp);
+	else
+		TeleportingActors.Add(OtherActor, {OverlappedComp});		
 }

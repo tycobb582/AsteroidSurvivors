@@ -25,6 +25,8 @@ APlayerShip::APlayerShip()
 
 	ExhaustParticles = CreateDefaultSubobject<UNiagaraComponent>("ExhaustParticles");
 	ExhaustParticles->SetupAttachment(RootComponent);
+
+	WeaponsSystem = CreateDefaultSubobject<UWeaponsSystem>("Weapons System");
 }
 
 // Called when the game starts or when spawned
