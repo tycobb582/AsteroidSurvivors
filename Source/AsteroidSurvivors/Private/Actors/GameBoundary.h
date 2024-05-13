@@ -46,10 +46,6 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BottomBound;
 
-	TMap<UPrimitiveComponent*, UPrimitiveComponent*> OppositeWalls;
-
-	TMap<AActor*, TArray<UPrimitiveComponent*>> TeleportingActors;
-
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool Debug;

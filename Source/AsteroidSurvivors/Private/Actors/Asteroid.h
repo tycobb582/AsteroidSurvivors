@@ -15,6 +15,8 @@ enum class EAsteroidRank : uint8
 	Bit
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAsteroidDestroyedDelegate, EAsteroidRank, Rank);
+
 UCLASS()
 class AAsteroid : public AActor
 {
@@ -57,8 +59,11 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	float Speed = InitialSpeed;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FVector Direction = FVector(1, 0, 0);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EAsteroidRank Rank = EAsteroidRank::Full;
+
+	FAsteroidDestroyedDelegate AsteroidDestroyed;
 };

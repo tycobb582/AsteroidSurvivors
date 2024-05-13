@@ -42,11 +42,6 @@ AGameBoundary::AGameBoundary()
 	TopBoundCollision->OnComponentEndOverlap.AddDynamic(this, &AGameBoundary::OnBoundsEndOverlap);
 	RightBoundCollision->OnComponentEndOverlap.AddDynamic(this, &AGameBoundary::OnBoundsEndOverlap);
 	BottomBoundCollision->OnComponentEndOverlap.AddDynamic(this, &AGameBoundary::OnBoundsEndOverlap);
-
-	OppositeWalls.Add(TopBoundCollision, BottomBoundCollision);
-	OppositeWalls.Add(BottomBoundCollision, TopBoundCollision);
-	OppositeWalls.Add(LeftBoundCollision, RightBoundCollision);
-	OppositeWalls.Add(RightBoundCollision, LeftBoundCollision);
 }
 
 void AGameBoundary::OnConstruction(const FTransform& Transform)
@@ -96,48 +91,27 @@ void AGameBoundary::OnConstruction(const FTransform& Transform)
 void AGameBoundary::OnBoundsEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	TArray<AActor*> ActorsTeleporting;
-	TeleportingActors.GetKeys(ActorsTeleporting);
-	for (const auto Actor : ActorsTeleporting)
-	{
-		if (!IsValid(Actor))
-			TeleportingActors.Remove(Actor);
-	}
-	
-	if (TeleportingActors.Contains(OtherActor))
-	{
-		TArray<UPrimitiveComponent*> WallsHit = TeleportingActors[OtherActor];
-		for (const auto Wall : WallsHit)
-		{
-			if (OverlappedComp == OppositeWalls[Wall])
-			{
-				TeleportingActors[OtherActor].Remove(Wall);
-				if (TeleportingActors[OtherActor].Num() == 0)
-					TeleportingActors.Remove(OtherActor);
-				return;
-			}
-		}
-	}
-	
-	if (Debug && TeleportingActors.Contains(OtherActor))
-		GEngine->AddOnScreenDebugMessage(-1, 2.0, FColor::Blue, FString::Printf(TEXT("%s has %d teleports"), *OtherActor->GetName(), TeleportingActors[OtherActor].Num()));
-		//GEngine->AddOnScreenDebugMessage(-1, 2.0, FColor::Blue, FString::Printf(TEXT("%s collision with %s"), *OtherActor->GetName(), *OverlappedComp->GetName()));
 	const FVector ActorLocation = OtherActor->GetActorLocation();
-	FVector NewLocation = ActorLocation;
-	const FString CompName = OverlappedComp->GetName();
+	if (OverlappedComp == LeftBoundCollision && ActorLocation.Y >= LeftBoundCollision->GetComponentLocation().Y)
+		return;
+	if (OverlappedComp == RightBoundCollision && ActorLocation.Y <= RightBoundCollision->GetComponentLocation().Y)
+		return;
+	if (OverlappedComp == TopBoundCollision && ActorLocation.X <= TopBoundCollision->GetComponentLocation().X)
+		return;
+	if (OverlappedComp == BottomBoundCollision && ActorLocation.X >= BottomBoundCollision->GetComponentLocation().X)
+		return;
 	
-	if (CompName == "LeftCollision")
+	FVector NewLocation = ActorLocation;
+	if (OverlappedComp == LeftBoundCollision)
 		NewLocation.Y = RightBoundCollision->GetComponentLocation().Y;
-	else if (CompName == "RightCollision")
+	else if (OverlappedComp == RightBoundCollision)
 		NewLocation.Y = LeftBoundCollision->GetComponentLocation().Y;
-	else if (CompName == "TopCollision")
+	else if (OverlappedComp == TopBoundCollision)
 		NewLocation.X = BottomBoundCollision->GetComponentLocation().X;
-	else if (CompName == "BottomCollision")
+	else if (OverlappedComp == BottomBoundCollision)
 		NewLocation.X = TopBoundCollision->GetComponentLocation().X;
 	OtherActor->SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
 
-	if (TeleportingActors.Contains(OtherActor))
-		TeleportingActors[OtherActor].Add(OverlappedComp);
-	else
-		TeleportingActors.Add(OtherActor, {OverlappedComp});		
+	if (Debug)
+		GEngine->AddOnScreenDebugMessage(-1, 2.0, FColor::Blue, FString::Printf(TEXT("%s teleport from %s"), *OtherActor->GetName(), *OverlappedComp->GetName()));
 }

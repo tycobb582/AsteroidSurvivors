@@ -7,7 +7,7 @@ AForwardCannon::AForwardCannon()
 {
 	const ConstructorHelpers::FClassFinder<ALaser> LaserClass(TEXT("/Game/Actors/Lasers/BP_ForwardCannonLaser"));
 	WeaponLaser = LaserClass.Class;
-	FireRate = 1.0;
+	FireRate = 0.5;
 	WeaponDamage = 35;
 }
 

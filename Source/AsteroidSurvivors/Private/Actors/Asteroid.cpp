@@ -3,7 +3,7 @@
 
 #include "Actors/Asteroid.h"
 
-#include "String/Split.h"
+#include "ASGameMode.h"
 
 // Sets default values
 AAsteroid::AAsteroid()
@@ -49,6 +49,7 @@ void AAsteroid::InitializeAsteroid(EAsteroidRank InitialRank)
 	case EAsteroidRank::Bit:
 		Health = InitialHealth * 0.33;
 		Speed = InitialSpeed * 1.5;
+		AsteroidDestroyed.AddDynamic(Cast<AASGameMode>(GetWorld()->GetAuthGameMode()), &AASGameMode::OnAsteroidDestroyed);
 		break;
 	default:
 		break;
@@ -69,14 +70,17 @@ void AAsteroid::Explode()
 	switch (Rank)
 	{
 		case EAsteroidRank::Full:
+			AsteroidDestroyed.Broadcast(Rank);
 			NewAsteroidRank = EAsteroidRank::Split;
 			NewAsteroidScale = FVector(0.75, 0.75, 0.75);
 			break;
 		case EAsteroidRank::Split:
+			AsteroidDestroyed.Broadcast(Rank);
 			NewAsteroidRank = EAsteroidRank::Bit;
 			NewAsteroidScale = FVector(0.5, 0.5, 0.5);
 			break;
 		default:
+			AsteroidDestroyed.Broadcast(Rank);
 			Destroy();
 			return;
 	}

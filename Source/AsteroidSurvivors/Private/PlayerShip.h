@@ -36,6 +36,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UNiagaraComponent* ExhaustParticles;
 
+	UPROPERTY(BlueprintReadOnly)
+	float MovementSpeed = 0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Input")
 	UInputMappingContext* InputMappingContext;
 
@@ -53,9 +56,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Movement")
 	float RotationSpeed = 10.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Movement")
-	float MovementSpeed = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Movement")
 	float TopSpeed = 300.0f;
