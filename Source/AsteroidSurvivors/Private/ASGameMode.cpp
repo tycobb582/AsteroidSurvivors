@@ -33,7 +33,8 @@ void AASGameMode::SpawnWave()
 		{
 			SpawnLocation = FMath::VRand();
 			SpawnLocation.Z = 0;
-			SpawnLocation *= FMath::FRandRange(-3900.0, 3900.0);
+			SpawnLocation.X *= FMath::FRandRange(-1900.0, 1900.0);
+			SpawnLocation.Y *= FMath::FRandRange(-3900.0, 3900.0);
 		}
 		while (FVector::Dist(SpawnLocation, PlayerLocation) <= 400);
 		const FTransform SpawnTransform = FTransform(SpawnLocation);

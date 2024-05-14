@@ -41,23 +41,48 @@ void APlayerShip::BeginPlay()
 	}
 }
 
+void APlayerShip::BeginThrust()
+{
+	Velocity += GetActorForwardVector() * 100;
+	ClampSpeed();
+}
+
 void APlayerShip::ShipMovement(const FInputActionValue& Value)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
-	MovementVector.Normalize();
-	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	FVector2D InputVector = Value.Get<FVector2D>();
+	InputVector.Normalize();
+	const float DeltaSeconds = GetWorld()->GetDeltaSeconds();
 	
-	float RotationInput = MovementVector.X;
-	FRotator ShipRotator = FRotator(0, RotationInput * RotationSpeed * DeltaSeconds, 0);
+	const float RotationInput = InputVector.X;
+	const FRotator ShipRotator = FRotator(0, RotationInput * RotationSpeed * DeltaSeconds, 0);
 	AddActorLocalRotation(ShipRotator);
-	
-	const float MovementInput = MovementVector.Y;
-	float NewMoveSpeed = MovementSpeed;
-	if (MovementInput > 0)
-		NewMoveSpeed += Acceleration * DeltaSeconds;
-	else if (MovementInput < 0)
-		NewMoveSpeed -= Acceleration * DeltaSeconds;
-	MovementSpeed = UKismetMathLibrary::FClamp(NewMoveSpeed, 0, TopSpeed);
+
+	if (InputVector.Y)
+	{
+		Acceleration = GetActorForwardVector() * AccelerationRate;
+		IsAccelerating = true;
+		Velocity += Acceleration * DeltaSeconds;
+		ClampSpeed();
+		const float MovementSpeed = Velocity.Length();
+		const float ParticleSpawnRate = 50 * (MovementSpeed / TopSpeed);
+		ExhaustParticles->SetFloatParameter(FName("SpawnRate"), ParticleSpawnRate);
+	}
+	else
+		IsAccelerating = false;
+}
+
+void APlayerShip::EndAcceleration(const FInputActionValue& Value)
+{
+	IsAccelerating = false;
+	ExhaustParticles->SetFloatParameter(FName("SpawnRate"), 0);
+}
+
+void APlayerShip::ClampSpeed()
+{
+	const FVector ShipDir = Velocity.GetSafeNormal();
+	const FVector MaxVelocity = ShipDir * TopSpeed;
+	Velocity.X = UKismetMathLibrary::FClamp(Velocity.X, FMath::Min(MaxVelocity.X, 0), FMath::Max(MaxVelocity.X, 0));
+	Velocity.Y = UKismetMathLibrary::FClamp(Velocity.Y, FMath::Min(MaxVelocity.Y, 0), FMath::Max(MaxVelocity.Y, 0));
 }
 
 // Called every frame
@@ -65,13 +90,16 @@ void APlayerShip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	const float ParticleSpawnRate = 50 * (MovementSpeed / TopSpeed);
-	ExhaustParticles->SetFloatParameter(FName("SpawnRate"), ParticleSpawnRate);
-	
-	if (MovementSpeed)
+	if (!IsAccelerating)
 	{
-		FVector NewLocation = GetActorLocation() + GetActorForwardVector() * (MovementSpeed * DeltaTime);
-		SetActorLocation(NewLocation);
+		Velocity -= Velocity.GetSafeNormal() * DragAccelerationRate * DeltaTime;
+		ClampSpeed();
+	}
+
+	if (Velocity.X or Velocity.Y)
+	{
+		const FVector NewLocation = GetActorLocation() + Velocity * DeltaTime;
+		SetActorLocation(NewLocation);	
 	}
 }
 
@@ -79,7 +107,9 @@ void APlayerShip::Tick(float DeltaTime)
 void APlayerShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	
-	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerShip::ShipMovement);	
+
+	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &APlayerShip::BeginThrust);
+	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerShip::ShipMovement);
+	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APlayerShip::EndAcceleration);
 }
 

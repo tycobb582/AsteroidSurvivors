@@ -24,6 +24,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	void BeginThrust();
+	
+	void ShipMovement(const FInputActionValue& Value);
+
+	void EndAcceleration(const FInputActionValue& Value);
+
+	void ClampSpeed();
+
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* Mesh;
 
@@ -37,15 +45,18 @@ protected:
 	UNiagaraComponent* ExhaustParticles;
 
 	UPROPERTY(BlueprintReadOnly)
-	float MovementSpeed = 0;
+	FVector Acceleration = FVector(0, 0, 0);
+	
+	UPROPERTY(BlueprintReadOnly)
+	FVector Velocity = FVector(0, 0, 0);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Input")
 	UInputMappingContext* InputMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Input")
 	UInputAction* MoveAction;
-
-	void ShipMovement(const FInputActionValue& Value);
+	
+	bool IsAccelerating = false;
 
 public:	
 	// Called every frame
@@ -61,5 +72,8 @@ public:
 	float TopSpeed = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Movement")
-	float Acceleration = 5.0f;
+	float AccelerationRate = 500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Movement")
+	float DragAccelerationRate = 250.0f;
 };
