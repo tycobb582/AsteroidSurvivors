@@ -5,6 +5,7 @@
 #include "EnhancedInputComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
+#include "Actors/Asteroid.h"
 #include "Components/BoxComponent.h"
 
 // Sets default values
@@ -18,7 +19,6 @@ APlayerShip::APlayerShip()
 
 	Collider = CreateDefaultSubobject<UBoxComponent>("CollisionBox");
 	Collider->SetupAttachment(RootComponent);
-	
 	
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Ship");
 	Mesh->SetupAttachment(RootComponent);
@@ -83,6 +83,20 @@ void APlayerShip::ClampSpeed()
 	const FVector MaxVelocity = ShipDir * TopSpeed;
 	Velocity.X = UKismetMathLibrary::FClamp(Velocity.X, FMath::Min(MaxVelocity.X, 0), FMath::Max(MaxVelocity.X, 0));
 	Velocity.Y = UKismetMathLibrary::FClamp(Velocity.Y, FMath::Min(MaxVelocity.Y, 0), FMath::Max(MaxVelocity.Y, 0));
+}
+
+void APlayerShip::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	if (const AAsteroid* AsteroidHit = Cast<AAsteroid>(OtherActor))
+	{
+		Health -= AsteroidHit->ImpactDamage;
+		Velocity *= - 1;
+		ClampSpeed();
+		if (Health <= 0)
+			DisplayGameOverScreen();
+	}
 }
 
 // Called every frame

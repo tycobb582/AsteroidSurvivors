@@ -32,6 +32,11 @@ protected:
 
 	void ClampSpeed();
 
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void DisplayGameOverScreen();
+
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* Mesh;
 
@@ -76,4 +81,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Movement")
 	float DragAccelerationRate = 250.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "PlayerShip | Stats")
+	int Health = 100;
 };

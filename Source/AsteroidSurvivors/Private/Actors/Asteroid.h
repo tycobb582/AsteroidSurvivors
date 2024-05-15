@@ -46,18 +46,20 @@ public:
 
 	void OnHit(const int LaserDamage);
 
-
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "Asteriod | Stats")
 	int InitialHealth = 100;
 
 	UPROPERTY(BlueprintReadWrite)
 	int Health = InitialHealth;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "Asteroid | Stats")
 	float InitialSpeed = 500;
 
 	UPROPERTY(BlueprintReadWrite)
 	float Speed = InitialSpeed;
+
+	UPROPERTY(EditAnywhere, Category= "Asteroid | Stats")
+	int ImpactDamage = 34;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FVector Direction = FVector(1, 0, 0);

@@ -15,9 +15,9 @@ void AForwardCannon::Fire()
 {
 	Super::Fire();
 	
-	FVector OwnerLocation = Owner->GetActorLocation();
-	FRotator OwnerRotation = Owner->GetActorRotation();
-	FVector FireDirection = Owner->GetActorForwardVector();
+	const FVector OwnerLocation = Owner->GetActorLocation();
+	const FRotator OwnerRotation = Owner->GetActorRotation();
+	const FVector FireDirection = Owner->GetActorForwardVector();
 	const FTransform SpawnTransform = FTransform(OwnerRotation, OwnerLocation);
 	ALaser* SpawnedLaser = GetWorld()->SpawnActorDeferred<ALaser>(WeaponLaser, SpawnTransform);
 	SpawnedLaser->InitializeLaser(FireDirection, WeaponDamage);
