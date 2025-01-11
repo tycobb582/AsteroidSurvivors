@@ -46,19 +46,19 @@ public:
 
 	void OnHit(const int LaserDamage);
 
-	UPROPERTY(EditAnywhere, Category= "Asteriod | Stats")
+	UPROPERTY(EditAnywhere, Category= "Asteroid|Stats")
 	int InitialHealth = 100;
 
 	UPROPERTY(BlueprintReadWrite)
 	int Health = InitialHealth;
 
-	UPROPERTY(EditAnywhere, Category= "Asteroid | Stats")
+	UPROPERTY(EditAnywhere, Category= "Asteroid|Stats")
 	float InitialSpeed = 500;
 
 	UPROPERTY(BlueprintReadWrite)
 	float Speed = InitialSpeed;
 
-	UPROPERTY(EditAnywhere, Category= "Asteroid | Stats")
+	UPROPERTY(EditAnywhere, Category= "Asteroid|Stats")
 	int ImpactDamage = 34;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
