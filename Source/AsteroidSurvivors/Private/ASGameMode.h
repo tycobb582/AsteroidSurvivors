@@ -36,7 +36,7 @@ public:
 	int GetWorldSize();
 
 	UFUNCTION()
-	void OnAsteroidDestroyed(EAsteroidRank AsteroidRank);
+	void OnAsteroidDestroyed(EAsteroidRank AsteroidRank, int AsteroidXpReward);
 
 	UPROPERTY(BlueprintReadWrite)
 	int WaveNum = 0;

@@ -15,7 +15,7 @@ enum class EAsteroidRank : uint8
 	Bit
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAsteroidDestroyedDelegate, EAsteroidRank, Rank);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAsteroidDestroyedDelegate, EAsteroidRank, Rank, int, Xp);
 
 UCLASS()
 class AAsteroid : public AActor
@@ -60,6 +60,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category= "Asteroid|Stats")
 	int ImpactDamage = 34;
+
+	UPROPERTY(EditAnywhere, Category= "Asteroid|Stats")
+	int XpReward = 25;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FVector Direction = FVector(1, 0, 0);

@@ -43,7 +43,7 @@ void AASGameMode::SpawnWave()
 	ActiveAsteroids = NumToSpawn * 4;
 }
 
-void AASGameMode::OnAsteroidDestroyed(EAsteroidRank Rank)
+void AASGameMode::OnAsteroidDestroyed(EAsteroidRank Rank, int XpReward)
 {
 	if (Rank == EAsteroidRank::Bit)
 	{

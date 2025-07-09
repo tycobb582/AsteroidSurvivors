@@ -4,6 +4,8 @@
 #include "Actors/Asteroid.h"
 
 #include "ASGameMode.h"
+#include "PlayerShip.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AAsteroid::AAsteroid()
@@ -35,6 +37,7 @@ void AAsteroid::BeginPlay()
 	GetActorBounds(true, Throwaway, AsteroidBounds);
 	StartLocation.Z = AsteroidBounds.Z;
 	SetActorLocation(StartLocation);
+	AsteroidDestroyed.AddDynamic(Cast<APlayerShip>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)), &APlayerShip::APlayerShip::OnAsteroidDestroyed);
 }
 
 void AAsteroid::InitializeAsteroid(EAsteroidRank InitialRank)
@@ -70,17 +73,17 @@ void AAsteroid::Explode()
 	switch (Rank)
 	{
 		case EAsteroidRank::Full:
-			AsteroidDestroyed.Broadcast(Rank);
+			AsteroidDestroyed.Broadcast(Rank, XpReward);
 			NewAsteroidRank = EAsteroidRank::Split;
 			NewAsteroidScale = FVector(0.75, 0.75, 0.75);
 			break;
 		case EAsteroidRank::Split:
-			AsteroidDestroyed.Broadcast(Rank);
+			AsteroidDestroyed.Broadcast(Rank, XpReward / 2);
 			NewAsteroidRank = EAsteroidRank::Bit;
 			NewAsteroidScale = FVector(0.5, 0.5, 0.5);
 			break;
 		default:
-			AsteroidDestroyed.Broadcast(Rank);
+			AsteroidDestroyed.Broadcast(Rank, XpReward / 4);
 			Destroy();
 			return;
 	}

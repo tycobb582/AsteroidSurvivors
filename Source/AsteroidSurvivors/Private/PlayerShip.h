@@ -20,6 +20,9 @@ public:
 	// Sets default values for this pawn's properties
 	APlayerShip();
 
+	UFUNCTION()
+	void OnAsteroidDestroyed(EAsteroidRank AsteroidRank, int AsteroidXpReward);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -36,6 +39,11 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void DisplayGameOverScreen();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	int GetExperienceToNextLevel();
+	
+	void UpdatePlayerLevel();
 
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* Mesh;
@@ -62,6 +70,12 @@ protected:
 	UInputAction* MoveAction;
 	
 	bool IsAccelerating = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "PlayerShip | Progression")
+	int PlayerLevel = 1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "PlayerShip | Progression")
+	int PlayerExperience = 0;
 
 public:	
 	// Called every frame

@@ -99,6 +99,27 @@ void APlayerShip::NotifyActorBeginOverlap(AActor* OtherActor)
 	}
 }
 
+int APlayerShip::GetExperienceToNextLevel()
+{
+	return pow(1.25, PlayerLevel - 1) * 100;
+}
+
+void APlayerShip::UpdatePlayerLevel()
+{
+	PlayerLevel++;
+}
+
+void APlayerShip::OnAsteroidDestroyed(EAsteroidRank AsteroidRank, int XpReward)
+{
+	PlayerExperience += XpReward;
+	int NecesssaryXp = UKismetMathLibrary::Clamp(GetExperienceToNextLevel(), 0, 2000);
+	if (PlayerExperience >= NecesssaryXp)
+	{
+		UpdatePlayerLevel();
+		PlayerExperience -= NecesssaryXp;
+	}
+}
+
 // Called every frame
 void APlayerShip::Tick(float DeltaTime)
 {
